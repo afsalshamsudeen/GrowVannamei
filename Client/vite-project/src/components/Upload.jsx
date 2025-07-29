@@ -1,10 +1,20 @@
 import React, { useRef, useState } from 'react'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import Papa from 'papaparse';
 
-const Upload = ({ setOpen, setCsvData, setCsvFileName }) => {
+const Upload = ({ setOpen, setCsvData, setCsvFileName, setParsedCsvRows }) => {
 
   const fileInputRef = useRef(null);
   const [fileName, setFileName] = useState('');
+
+  const parseCsv = (csvContent) =>{
+    const parsed = Papa.parse(csvContent,{
+      header:true,
+      skipEmptyLines: true,
+    });
+
+    return parsed.data
+  }
 
   const handleFileSelect = (e) =>{
     const file = e.target.files[0];
@@ -15,7 +25,10 @@ const Upload = ({ setOpen, setCsvData, setCsvFileName }) => {
       const reader = new FileReader();
       reader.onload = (event) =>{
         const csvContent = event.target.result;
+        const parsedData = parseCsv(csvContent);
+        setParsedCsvRows(parsedData);
         setCsvData(csvContent)
+        
         console.log('csv content:', csvContent);
       };
       reader.readAsText(file);
@@ -23,6 +36,7 @@ const Upload = ({ setOpen, setCsvData, setCsvFileName }) => {
       alert('Please upload a valid CSV file!')
     }
   };
+
   const handleBrowseClick =()=>{
     fileInputRef.current.click();
   }

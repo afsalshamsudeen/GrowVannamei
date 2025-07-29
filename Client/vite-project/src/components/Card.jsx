@@ -3,14 +3,19 @@ import Title from './Title'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import DriveFolderUploadIcon from '@mui/icons-material/DriveFolderUpload';
 import Upload from './Upload';
+import axios from 'axios';
+import PredictionTable from './PredictionTable';
 
 const Card = () => {
 
   const [open, setOpen] = useState(false);
   const [csvData, setCsvData] = useState(null);
   const [csvFileName, setCsvFileName] = useState('');
+  const [predictions, setPredictions] = useState([]);
+  const [parsedCsvRows, setParsedCsvRows] = useState([]);
 
-  const handlePredict = ()=>{
+
+  const handlePredict = async()=>{
     if(!csvData){
       alert("Please upload a csv file first");
       return;
@@ -18,6 +23,25 @@ const Card = () => {
     console.log('Sending data to back end: ',csvData);
 
     //TODO Axios logic to send csv file to backend
+    try{
+      const response = await axios.post('http://localhost:8000/predict', csvData,{
+        headers:{
+          'Content-Type': 'text/plain',
+        }
+      } );
+
+      console.log('Prediction Response:', response.data);
+      setPredictions(response.data.predictions)
+      //alert(`Prediction Result: ${JSON.stringify(response.data)}`);
+
+    }catch (error){
+      console.error('Error Predicting: ', error);
+      alert('Prediction failed! check Console for details');
+      
+
+    }
+    setOpen(false);
+
   }
 
   return (
@@ -35,10 +59,13 @@ const Card = () => {
         </div>
       <button onClick={handlePredict} className='bg-blue-500 text-white px-4 py-2 rounded-md font-medium cursor-pointer hover:bg-blue-600'> Upload and Predict</button>
     </div>
+    {Array.isArray(predictions) && predictions.length > 0 && (
+   <PredictionTable predictions={predictions} csvRows={parsedCsvRows}/>
+  )}
      {open && (
       
       <div className='fixed inset-0 flex items-center justify-center bg-black/30 z-50'>
-      <Upload setOpen={setOpen} setCsvData={setCsvData} setCsvFileName={setCsvFileName}/>
+      <Upload setOpen={setOpen} setCsvData={setCsvData} setCsvFileName={setCsvFileName} setParsedCsvRows={setParsedCsvRows}/>
       </div>
       
       )}
